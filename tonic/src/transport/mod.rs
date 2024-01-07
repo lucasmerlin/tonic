@@ -90,6 +90,7 @@
 //! [rustls]: https://docs.rs/rustls/0.16.0/rustls/
 
 pub mod channel;
+#[cfg(feature = "transport")]
 pub mod server;
 
 mod error;
@@ -102,6 +103,7 @@ mod tls;
 #[cfg_attr(docsrs, doc(cfg(feature = "channel")))]
 pub use self::channel::{Channel, Endpoint};
 pub use self::error::Error;
+#[cfg(feature = "transport")]
 #[doc(inline)]
 pub use self::server::Server;
 #[doc(inline)]
@@ -111,6 +113,7 @@ pub(crate) use self::service::ConnectError;
 #[cfg(feature = "tls")]
 #[cfg_attr(docsrs, doc(cfg(feature = "tls")))]
 pub use self::tls::Certificate;
+#[cfg(feature = "transport")]
 pub use axum::{body::Body as AxumBoxBody, Router as AxumRouter};
 pub use hyper::{body::Body, Uri};
 #[cfg(feature = "tls")]

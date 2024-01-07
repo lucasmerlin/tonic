@@ -4,6 +4,7 @@ use crate::{
     body::{boxed, BoxBody},
     transport::{BoxFuture, Endpoint},
 };
+
 use http::Uri;
 use hyper::rt;
 use hyper::{client::conn::http2::Builder, rt::Executor};
@@ -16,10 +17,18 @@ use tower::load::Load;
 use tower::{
     layer::Layer,
     limit::{concurrency::ConcurrencyLimitLayer, rate::RateLimitLayer},
-    util::BoxService,
-    ServiceBuilder, ServiceExt,
+    ServiceBuilder,
+    ServiceExt, util::BoxService,
 };
+use tower::load::Load;
 use tower_service::Service;
+
+use crate::{
+    body::BoxBody,
+    transport::{BoxFuture, Endpoint},
+};
+
+use super::{AddOrigin, grpc_timeout::GrpcTimeout, reconnect::Reconnect, UserAgent};
 
 pub(crate) type Response<B = BoxBody> = http::Response<B>;
 pub(crate) type Request<B = BoxBody> = http::Request<B>;
@@ -43,16 +52,34 @@ impl Connection {
             .timer(TokioTimer::new())
             .clone();
 
-        if let Some(val) = endpoint.http2_keep_alive_timeout {
-            settings.keep_alive_timeout(val);
+        if let Some(val) = endpoint.http2_adaptive_window {
+            settings.http2_adaptive_window(val);
         }
 
-        if let Some(val) = endpoint.http2_keep_alive_while_idle {
-            settings.keep_alive_while_idle(val);
+        #[cfg(feature = "transport")]
+        {
+            settings
+                .http_keep_alive_interval(endpoint.http2_keep_alive_interval);
+
+            if let Some(val) = endpoint.http2_keep_alive_timeout {
+                settings.keep_alive_timeout(val);
+            }
+
+            if let Some(val) = endpoint.http2_keep_alive_while_idle {
+                settings.keep_alive_while_idle(val);
+            }
         }
 
         if let Some(val) = endpoint.http2_adaptive_window {
             settings.adaptive_window(val);
+        }
+
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            settings.executor(wasm::Executor)
+                // reset streams require `Instant::now` which is not available on wasm
+                .http_max_concurrent_reset_streams(0);
         }
 
         let stack = ServiceBuilder::new()
@@ -207,5 +234,21 @@ where
 
             Ok(SendRequest::from(send_request))
         })
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+mod wasm {
+    use std::future::Future;
+    use std::pin::Pin;
+
+    type BoxSendFuture = Pin<Box<dyn Future<Output = ()> + Send>>;
+
+    pub(crate) struct Executor;
+
+    impl hyper::rt::Executor<BoxSendFuture> for Executor {
+        fn execute(&self, fut: BoxSendFuture) {
+            wasm_bindgen_futures::spawn_local(fut)
+        }
     }
 }
