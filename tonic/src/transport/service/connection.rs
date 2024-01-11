@@ -14,13 +14,13 @@ use std::{
     task::{Context, Poll},
 };
 use tower::load::Load;
+use tower::load::Load;
 use tower::{
     layer::Layer,
     limit::{concurrency::ConcurrencyLimitLayer, rate::RateLimitLayer},
-    ServiceBuilder,
-    ServiceExt, util::BoxService,
+    util::BoxService,
+    ServiceBuilder, ServiceExt,
 };
-use tower::load::Load;
 use tower_service::Service;
 
 use crate::{
@@ -28,7 +28,7 @@ use crate::{
     transport::{BoxFuture, Endpoint},
 };
 
-use super::{AddOrigin, grpc_timeout::GrpcTimeout, reconnect::Reconnect, UserAgent};
+use super::{grpc_timeout::GrpcTimeout, reconnect::Reconnect, AddOrigin, UserAgent};
 
 pub(crate) type Response<B = BoxBody> = http::Response<B>;
 pub(crate) type Request<B = BoxBody> = http::Request<B>;
@@ -58,8 +58,7 @@ impl Connection {
 
         #[cfg(feature = "transport")]
         {
-            settings
-                .http_keep_alive_interval(endpoint.http2_keep_alive_interval);
+            settings.http_keep_alive_interval(endpoint.http2_keep_alive_interval);
 
             if let Some(val) = endpoint.http2_keep_alive_timeout {
                 settings.keep_alive_timeout(val);
@@ -77,7 +76,8 @@ impl Connection {
 
         #[cfg(target_arch = "wasm32")]
         {
-            settings.executor(wasm::Executor)
+            settings
+                .executor(wasm::Executor)
                 // reset streams require `Instant::now` which is not available on wasm
                 .http_max_concurrent_reset_streams(0);
         }

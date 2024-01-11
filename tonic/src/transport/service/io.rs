@@ -85,12 +85,12 @@ impl rt::Write for BoxedIo {
 
 #[cfg(feature = "transport")]
 mod server {
-    use tower::util::Either;
     use crate::transport::server::Connected;
     use std::io;
     use std::io::IoSlice;
     use std::pin::Pin;
     use std::task::{Context, Poll};
+    use tower::util::Either;
 
     #[cfg(feature = "tls")]
     use tokio_rustls::server::TlsStream;
@@ -105,7 +105,7 @@ mod server {
 
     #[cfg(feature = "tls")]
     type ServerIoConnectInfo<IO> =
-    Either<<IO as Connected>::ConnectInfo, <TlsStream<IO> as Connected>::ConnectInfo>;
+        Either<<IO as Connected>::ConnectInfo, <TlsStream<IO> as Connected>::ConnectInfo>;
 
     #[cfg(not(feature = "tls"))]
     type ServerIoConnectInfo<IO> = Either<<IO as Connected>::ConnectInfo, ()>;
@@ -122,9 +122,9 @@ mod server {
 
         #[cfg(feature = "tls")]
         pub(in crate::transport) fn connect_info(&self) -> ServerIoConnectInfo<IO>
-            where
-                IO: Connected,
-                TlsStream<IO>: Connected,
+        where
+            IO: Connected,
+            TlsStream<IO>: Connected,
         {
             match self {
                 Self::Io(io) => Either::A(io.connect_info()),
@@ -134,8 +134,8 @@ mod server {
 
         #[cfg(not(feature = "tls"))]
         pub(in crate::transport) fn connect_info(&self) -> ServerIoConnectInfo<IO>
-            where
-                IO: Connected,
+        where
+            IO: Connected,
         {
             match self {
                 Self::Io(io) => Either::A(io.connect_info()),
@@ -144,8 +144,8 @@ mod server {
     }
 
     impl<IO> AsyncRead for ServerIo<IO>
-        where
-            IO: AsyncWrite + AsyncRead + Unpin,
+    where
+        IO: AsyncWrite + AsyncRead + Unpin,
     {
         fn poll_read(
             mut self: Pin<&mut Self>,
@@ -161,8 +161,8 @@ mod server {
     }
 
     impl<IO> AsyncWrite for ServerIo<IO>
-        where
-            IO: AsyncWrite + AsyncRead + Unpin,
+    where
+        IO: AsyncWrite + AsyncRead + Unpin,
     {
         fn poll_write(
             mut self: Pin<&mut Self>,

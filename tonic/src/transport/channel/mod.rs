@@ -9,7 +9,7 @@ pub use endpoint::Endpoint;
 #[cfg(feature = "tls")]
 pub use tls::ClientTlsConfig;
 
-use super::service::{Connection};
+use super::service::Connection;
 #[cfg(feature = "transport")]
 use super::service::{DynamicServiceStream, SharedExec};
 use crate::body::BoxBody;
@@ -20,10 +20,11 @@ use http::{
     Request, Response,
 };
 use hyper_util::client::legacy::connect::Connection as HyperConnection;
+#[cfg(feature = "transport")]
+use std::hash::Hash;
 use std::{
     fmt,
     future::Future,
-    hash::Hash,
     pin::Pin,
     task::{ready, Context, Poll},
 };
@@ -33,7 +34,6 @@ use hyper::rt;
 use tower::balance::p2c::Balance;
 use tower::{
     buffer::{self, Buffer},
-    discover::{Change, Discover},
     util::{BoxService, Either},
     Service,
 };
@@ -186,6 +186,7 @@ impl Channel {
         Ok(Channel { svc })
     }
 
+    #[cfg(feature = "transport")]
     pub(crate) fn balance<D, E>(discover: D, buffer_size: usize, executor: E) -> Self
     where
         D: Discover<Service = Connection> + Unpin + Send + 'static,
