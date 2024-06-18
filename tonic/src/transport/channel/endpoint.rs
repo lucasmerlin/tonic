@@ -8,7 +8,6 @@ use crate::transport::{service::SharedExec, Error, Executor};
 use bytes::Bytes;
 use http::{uri::Uri, HeaderValue};
 use hyper::rt;
-use hyper_util::client::legacy::connect::HttpConnector;
 use std::{fmt, future::Future, pin::Pin, str::FromStr, time::Duration};
 use tower_service::Service;
 

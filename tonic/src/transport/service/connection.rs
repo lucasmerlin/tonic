@@ -1,5 +1,5 @@
 use super::SharedExec;
-use super::{grpc_timeout::GrpcTimeout, reconnect::Reconnect, AddOrigin, UserAgent};
+use super::{grpc_timeout::GrpcTimeout, AddOrigin, UserAgent};
 use crate::{
     body::{boxed, BoxBody},
     transport::{BoxFuture, Endpoint},
@@ -8,27 +8,14 @@ use crate::{
 use http::Uri;
 use hyper::rt;
 use hyper::{client::conn::http2::Builder, rt::Executor};
-use hyper_util::rt::TokioTimer;
 use std::{
     fmt,
     task::{Context, Poll},
 };
 use tower::load::Load;
-use tower::load::Load;
-use tower::{
-    layer::Layer,
-    limit::{concurrency::ConcurrencyLimitLayer, rate::RateLimitLayer},
-    util::BoxService,
-    ServiceBuilder, ServiceExt,
-};
+use tower::{layer::Layer, limit::{concurrency::ConcurrencyLimitLayer, rate::RateLimitLayer}, util::BoxService, ServiceBuilder, ServiceExt};
 use tower_service::Service;
 
-use crate::{
-    body::BoxBody,
-    transport::{BoxFuture, Endpoint},
-};
-
-use super::{grpc_timeout::GrpcTimeout, reconnect::Reconnect, AddOrigin, UserAgent};
 
 pub(crate) type Response<B = BoxBody> = http::Response<B>;
 pub(crate) type Request<B = BoxBody> = http::Request<B>;
@@ -49,16 +36,16 @@ impl Connection {
             .initial_stream_window_size(endpoint.init_stream_window_size)
             .initial_connection_window_size(endpoint.init_connection_window_size)
             .keep_alive_interval(endpoint.http2_keep_alive_interval)
-            .timer(TokioTimer::new())
+            //.timer(TokioTimer::new())
             .clone();
 
         if let Some(val) = endpoint.http2_adaptive_window {
-            settings.http2_adaptive_window(val);
+            settings.adaptive_window(val);
         }
 
         #[cfg(feature = "transport")]
         {
-            settings.http_keep_alive_interval(endpoint.http2_keep_alive_interval);
+            settings.keep_alive_interval(endpoint.http2_keep_alive_interval);
 
             if let Some(val) = endpoint.http2_keep_alive_timeout {
                 settings.keep_alive_timeout(val);
@@ -97,10 +84,11 @@ impl Connection {
         let make_service =
             MakeSendRequestService::new(connector, endpoint.executor.clone(), settings);
 
-        let conn = Reconnect::new(make_service, endpoint.uri.clone(), is_lazy);
+
+        // let conn = Reconnect::new(make_service, endpoint.uri.clone(), is_lazy);
 
         Self {
-            inner: BoxService::new(stack.layer(conn)),
+            inner: BoxService::new(stack.layer(stack)),
         }
     }
 

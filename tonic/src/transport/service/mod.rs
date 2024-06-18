@@ -5,10 +5,10 @@ mod connector;
 mod discover;
 pub(crate) mod executor;
 pub(crate) mod grpc_timeout;
-mod io;
-mod reconnect;
 #[cfg(feature = "transport")]
-mod router;
+mod io;
+#[cfg(feature = "transport")]
+mod reconnect;
 #[cfg(feature = "tls")]
 mod tls;
 mod user_agent;

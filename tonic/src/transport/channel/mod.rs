@@ -28,12 +28,11 @@ use std::{
     pin::Pin,
     task::{ready, Context, Poll},
 };
-use tokio::sync::mpsc::{channel, Sender};
 
 use hyper::rt;
-use tower::balance::p2c::Balance;
 use tower::{
     buffer::{self, Buffer},
+    discover::{Discover},
     util::{BoxService, Either},
     Service,
 };
